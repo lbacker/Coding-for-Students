@@ -1,6 +1,6 @@
 import turtle           # Imports library that allows user to alter a turtle. A turtle is something that has a position and a direction, and can draw lines
 from turtle import *    # Imports functions from the turtle library that allow user to alter the turtle
-from Tkinter import *   # Imports functions from the Tkinter library that allow user to create a Graphical User Interface (GUI)
+from tkinter import *   # Imports functions from the Tkinter library that allow user to create a Graphical User Interface (GUI)
 from math import *      # Imports functions from the math library that allows user to use math functions (ex. sine, cosine, square root)
 
 # Global constant definitions 
