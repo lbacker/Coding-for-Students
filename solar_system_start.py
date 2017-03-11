@@ -24,82 +24,36 @@ class planet(Turtle):   # This function defines the parameters for each planets
         ry = (other.yloc-self.yloc)                    
         r = sqrt(rx**2 + ry**2)                        
 
-        #if self.name == 'Earth' and other.name == 'Mars':
-        #    print 'Earth to Mars distance (km): ' + str(r/1000) + ' On day: ' + str(date)
-            
         # Test if there is a collision between planets, handle the error!
         if r < self.diameter and other.name != 'MarsRover':   
             raise ValueError("Collision between objects %r and %r"      
                              % (self.name, other.name))
-            
-        # Handles the case that the spacecraft has landed 
-        elif r < self.diameter: 
-            return 0, 0             
+
+        ##############
+        # Add in function that handles the spacecraft landing case and returns fx, fy = 0,0          
              
         # Otherwise, update the gravitational force!
-        else:
-            # Compute the overall force
-            f = G * self.mass * other.mass / (r**2)          
+        f = G * self.mass * other.mass / (r**2)          
 
-            theta = atan2(ry, rx)           # Find the angle between the hypotenuse and the adjacent side
-            fx = cos(theta) * f             # Compute the x component of the force on the planet
-            fy = sin(theta) * f             # Compute the y component of the force on the planet
-            return fx, fy                   # Return the x and y components of the force to the main loop
+        theta = atan2(ry, rx)           # Find the angle between the hypotenuse and the adjacent side
+        fx = cos(theta) * f             # Compute the x component of the force on the planet
+        fy = sin(theta) * f             # Compute the y component of the force on the planet
 
-# Class definitions: spacecraft
-class spacecraft(Turtle):  
+        return fx, fy                   # Return the x and y components of the force to the main loop
 
-    # Initialize planet name, location, velocity       
-    vx = vy = 0.0       
-    xloc = yloc = 0.0   
+    #########
+    # Add a testlanding function for the spacecraft! Return 1 if within diameter, 0 if not
 
-    # Compute the attraction between planet and other body
-    def attraction(self, other, date):        
-
-        # Compute x, y, and total distances between planet and other body
-        rx = (other.xloc-self.xloc)                     
-        ry = (other.yloc-self.yloc)                     
-        r = sqrt(rx**2 + ry**2)                         
-
-        # If the rover has landed, don't compute attraction between it and other bodies! - should be able to remove XX
-        if r <= other.diameter:  
-            return 0,0
-            
-        # Otherwise, update the gravitational force!
-        else:
-            # Compute the overall force
-            f = G * self.mass * other.mass / (r**2)         
-
-            theta = atan2(ry, rx)           # Find the angle between the hypotenuse and the adjacent side
-            fx = cos(theta) * f             # Compute the x component of the force on the planet
-            fy = sin(theta) * f             # Compute the y component of the force on the planet
-        
-            return fx, fy                   # Return the x and y components of the force to the main loop
-
-    # Test if the spacecraft has landed. Return 1 if it has, 0 if not
-    def testLanding(self, other, date):       
-        rx = (other.xloc-self.xloc)                     # Compute the x distance of the other planet
-        ry = (other.yloc-self.yloc)                     # Compute the y distance of the other planet
-        r = sqrt(rx**2 + ry**2)                         # Compute the hypotenuse 
-
-        if other.name == 'Mars':
-            print 'Spacecraft to Mars distance (km): ' + str(r/1000) + ' On day: ' + str(date)
-   
-        if r <= other.diameter:  
-            #if other.name != 'Earth':
-                # print "Rover has landed on " + str(other.name) + "At day" + str(date) # Print landing
-            return 1 # Rover has landed: return true!
-        else:
-            return 0 # Rover has not landed: return false!
-
+    # Include a test for spacecraft to mars distance
+    
         
 def loop(system):                       # This function calculates the orbit of each planet and displays it in a window
     
     timestep = 1*24*3600                # One earth day
     date = 0                            # Starting date for the simulation - date increases for every iteration of the loop
 
-    thrust_date = 2
-    added_velocity = 11.186*(10**3)
+    #########
+    # Add date for thrust and velocity to add
     
     for body in system:                                 # Runs a loop for each planet
         body.goto(body.xloc*SCALE, body.yloc*SCALE)     # Puts the planet in its proper location on the display
@@ -122,7 +76,6 @@ def loop(system):                       # This function calculates the orbit of 
                 
             force[body] = (total_fx, total_fy)        # Assign the total force exerted on the planet to the dictionary, force
 
-
         # Update velocities, test for landing
         for body in system:                                       
             fx, fy = force[body]                                 # Assign the components of the total force to the variables fx and fy
@@ -130,32 +83,25 @@ def loop(system):                       # This function calculates the orbit of 
             # Compute velocities from gravity
             body.vx += fx / body.mass * timestep                # Calculate the new x component of the velocity
             body.vy += fy / body.mass * timestep                # Calculate the new y component of the velocity
-            # print "Updating planet" + str(body.name) + " with " + str(body.vx) + " " + str(body.vy)
 
-            # Compute angle of earth velocity to use for spacecraft
-            if body.name == 'Earth':
-                theta = atan2(body.vy, body.vx)
+            #######
+            # Add print statement to see the sizes of the velocities from each planet!
 
-            # Test if spacecraft has landed!
-            for other in system:        
-                onPlanet = 0                                    # Set onPlanet to be 0 so that it is unknown for each body
-                if body is other or body.name != 'MarsRover':
-                    continue
-                onPlanet = body.testLanding(other,date)
+            ######
+            # If the body is earth, compute the angle theta to use to compute the new velocity angle for a Hohmann transfer
 
-                # If landed, use planet velocity instead
-                if onPlanet == 1:      
-                    # print " Spacecraft is on " + str(other.name) + " on day " + str(date) + " !"
-                    body.vx = other.vx
-                    body.vy = other.vy
+            ######
+            # Test if spacecraft has landed! use a test over all other bodies in system and call testLanding function if it's the spacecraft
+            # Set the onPlanet to be initialized to zero inside of the loop 
 
-            # Apply thrust on specified date: only to the spacecraft!
-            if body.name == 'MarsRover' and date == thrust_date:
-                body.vx += cos(theta) * added_velocity             # Compute the x component of the force on the planet
-                body.vy += sin(theta) * added_velocity             # Compute the y component of the force on the planet
+            ######
+            # If landed, use planet velocity (other.vx, other.vy) instead
+
+            ######
+            # Apply thrust on specified date: only to the spacecraft at the desired angle!
 
                 
-        # Update locations of planets
+        # Update locations of all bodies
         for body in system:
             body.xloc += body.vx * timestep                     # Calculate the new x component of the position
             body.yloc += body.vy * timestep                     # Calculate the new y component of the position 
@@ -249,6 +195,7 @@ def main():                             # Sets up the positions, velocities, col
     mars.color('red')
     mars.shape('circle')
     mars.shapesize(0.5,0.5,1)
+    #### If it's hard to land, increase diameter here!
     mars.diameter = 6779
     mars.xloc = (1.524 * AU) * 0.85391432258
     mars.yloc = (1.524 * AU) * 0.52041361405
@@ -281,17 +228,10 @@ def main():                             # Sets up the positions, velocities, col
     jupiter.vy = 13.06 * 1000 * -0.97480014384
     jupiter.vx = 13.06 * 1000 * 0.22307998468
 
-    marsrover = spacecraft()
-    marsrover.name = 'MarsRover'
-    marsrover.mass = 3893
-    marsrover.penup() 
-    marsrover.color('black')
-    marsrover.shape('classic')
-    marsrover.shapesize(0.5,0.5,1)
-    marsrover.xloc = earth.xloc
-    marsrover.yloc = earth.yloc
-    marsrover.vy = earth.vy
-    marsrover.vx = earth.vx
+    ######
+    # Add space craft! Give it a name! Give it a mass (400-50,000kg)!
+    # Initialize it to earth's velocity and location
+
     
     """
     alien = planet()
